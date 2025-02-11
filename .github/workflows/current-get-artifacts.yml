@@ -1,4 +1,4 @@
-name: Test Current Pagination 
+name: Current Pagination With Many Jobs
 
 on:
   workflow_dispatch:  # Manual trigger

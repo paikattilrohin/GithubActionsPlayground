@@ -1,4 +1,4 @@
-name: Test Pagination 2
+name: README Example
 
 on:
   workflow_dispatch:
@@ -33,7 +33,7 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - id: previous_jobs
-        uses: snapsheet/get-artifacts-as-outputs@0.1.1
+        uses: snapsheet/get-artifacts-as-outputs@dist/SRE-2654-get-artifacts-as-outputs-support-many-jobs
         with:
           output_filename: outputs.json
 

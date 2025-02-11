@@ -1,4 +1,4 @@
-name: Test Pagination Dist folder
+name: CDKTF Diff example
 
 on:
   workflow_dispatch:  # Manual trigger
