@@ -1,0 +1,63 @@
+name: Test Pagination Dist folder
+
+on:
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  # This will create 120 jobs (10 x 12)
+  matrix_jobs1:
+    strategy:
+      matrix:
+        name: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    runs-on: ubuntu-latest
+    name: Matrix Job (${{ matrix.name }})
+    steps:
+      - name: Generate output
+        run: |
+          echo "{\"job\": \"${{ matrix.name }}\", \"timestamp\": \"$(date -u)\"}" > output.json
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.job }}_${{ matrix.name }}
+          path: output.json
+
+  matrix_jobs2:
+    strategy:
+      matrix:
+        name: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    runs-on: ubuntu-latest
+    name: Matrix Job (${{ matrix.name }})
+    steps:
+      - name: Generate output
+        run: |
+          echo "{\"job\": \"${{ matrix.name }}\", \"timestamp\": \"$(date -u)\"}" > output.json
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.job }}_${{ matrix.name }}
+          path: output.json          
+
+  consolidate:
+    needs: [matrix_jobs1, matrix_jobs2]
+    runs-on: ubuntu-latest
+    name: Consolidate Outputs
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - id: get_artifacts
+        uses: snapsheet/get-artifacts-as-outputs@dist/SRE-2654-get-artifacts-as-outputs-support-many-jobs
+        with:
+          output_filename: output.json
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: "consolidated_output"
+          path: output.json         
+      - name: Display results
+        run: |        
+          echo "these are the results"
+          echo '${{ steps.get_artifacts.outputs.matrix_jobs }}'
+        
+        

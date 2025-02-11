@@ -1,0 +1,61 @@
+name: Test Current Pagination 
+
+on:
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  matrix_setup:
+    runs-on: ubuntu-latest
+    outputs:
+      test_matrix: '[1,2,3,4,5,6,7,8,9,10]'
+    steps:
+      - run: echo "Setting up matrix values"
+
+  test_jobs:  # Changed job ID to match what we'll look for in outputs
+    needs: [matrix_setup]
+    strategy:
+      matrix:
+        name: ${{ fromJson(needs.matrix_setup.outputs.test_matrix) }}
+    runs-on: ubuntu-latest
+    name: Test Jobs (${{ matrix.name }})  # This is the display name
+    steps:
+      - name: Generate output
+        run: |
+          echo "{\"job\": \"${{ matrix.name }}\", \"timestamp\": \"$(date -u)\"}" > output.json
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: test_jobs_${{ matrix.name }}  # Changed to match job ID
+          path: output.json
+
+  generate_output:
+    name: Generate Output
+    needs: [test_jobs]  # Updated to match new job ID
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - id: previous_jobs
+        uses: snapsheet/get-artifacts-as-outputs@0.1.1
+        with:
+          output_filename: output.json
+
+      - name: Verify outputs
+        run: |
+          echo "Total jobs found:"
+          echo '${{ steps.previous_jobs.outputs.test_jobs }}' | jq length  # Changed to match job ID
+          
+          echo "Sample of jobs:"
+          echo '${{ steps.previous_jobs.outputs.test_jobs }}' | jq 'to_entries | .[0:5]'
+          
+          echo "Verifying all jobs are present..."
+          for i in {1..10}; do
+            if ! echo '${{ steps.previous_jobs.outputs.test_jobs }}' | jq -e ".\"Test Jobs ($i)\"" > /dev/null; then
+              echo "Missing job: Test Jobs ($i)"
+              exit 1
+            fi
+          done
+          echo "All jobs found successfully!"
+        
+        
